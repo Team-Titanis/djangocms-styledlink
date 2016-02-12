@@ -5,8 +5,11 @@ import warnings
 from importlib import import_module
 
 from django.conf import settings
-from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
+try:
+    from django.contrib.contenttypes.fields import GenericForeignKey
+except:
+    from django.contrib.contenttypes import generic
 from django.db import models
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
@@ -45,7 +48,7 @@ for model in DJANGOCMS_STYLEDLINK_MODELS:
 
     # Check that any manager method defined is legit
     if 'manager_method' in model and not getattr(cls.objects, model['manager_method']):
-        warnings.warn('djangocms_styledlink: Specified manager_method %s for model %s does not appear to exist. Skipping...' %(model['manager_method'], model['class_path'], ), SyntaxWarning)
+        warnings.warn('djangocms_styledlink: Specified manager_method %s for model %s does not appear to exist. Skipping...' % (model['manager_method'], model['class_path'],), SyntaxWarning)
         continue
 
     ok = True
@@ -54,7 +57,7 @@ for model in DJANGOCMS_STYLEDLINK_MODELS:
             try:
                 cls._meta.get_field_by_name(field.split('__')[0])
             except models.FieldDoesNotExist:
-                warnings.warn('StyledLink: Defined filter expression refers to a field (%s) in model %s that do not appear to exist. Skipping...' % (field, model['class_path'], ), SyntaxWarning)
+                warnings.warn('StyledLink: Defined filter expression refers to a field (%s) in model %s that do not appear to exist. Skipping...' % (field, model['class_path'],), SyntaxWarning)
                 ok = False
                 break
     if not ok:
@@ -68,7 +71,7 @@ for model in DJANGOCMS_STYLEDLINK_MODELS:
             try:
                 cls._meta.get_field_by_name(field)
             except models.FieldDoesNotExist:
-                warnings.warn('StyledLink: Defined order_by expression refers to a field (%s) in model %s that do not appear to exist. Skipping...' % (field, model['class_path'], ), SyntaxWarning)
+                warnings.warn('StyledLink: Defined order_by expression refers to a field (%s) in model %s that do not appear to exist. Skipping...' % (field, model['class_path'],), SyntaxWarning)
                 ok = False
                 break;
     if not ok:
@@ -136,7 +139,7 @@ class StyledLink(CMSPlugin):
         null=True,
     )
 
-    int_destination = generic.GenericForeignKey(
+    int_destination = GenericForeignKey(
         'int_destination_type',
         'int_destination_id',
     )
@@ -191,7 +194,7 @@ class StyledLink(CMSPlugin):
     styles = models.ManyToManyField(StyledLinkStyle,
         blank=True,
         default=None,
-        null=True,
+#         null=True,
         help_text=_('Optional. Choose one or more styles for this link.'),
         related_name='styled_link_style',
         verbose_name=_("link style"),
@@ -208,17 +211,17 @@ class StyledLink(CMSPlugin):
             url = self.int_destination.get_absolute_url()
             if self.page_destination:
                 # Oooh, look, it also has a hash component
-                return u'%s#%s' % (url, self.page_destination, )
+                return u'%s#%s' % (url, self.page_destination,)
             return url
         elif self.page_destination and not self.int_hash:
             # OK, this was just an intra-page hash
-            return u'#%s' % (self.page_destination, )
+            return u'#%s' % (self.page_destination,)
         elif self.ext_destination:
             # External link
             return self.ext_destination
         elif self.mailto:
             # Mailto: link
-            return u'mailto:%s' % (self.mailto, )
+            return u'mailto:%s' % (self.mailto,)
         else:
             return ''
 
